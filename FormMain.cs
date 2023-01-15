@@ -226,9 +226,10 @@ namespace ActualSQL
                             command = $"EXEC GrantRights {user}, {table}, '{action}', 'SELECT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
-                                  $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'";
-                                 // $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
-                                  //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
+                                  $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
+                            // $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
+                            //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
                         }
                         break;
                 }
@@ -253,7 +254,6 @@ namespace ActualSQL
             if (!Auth.asDepositor)
             {
                 Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Пользователь: " + userName;
-                tableInfoLbl.Text = $"Доступные объекты БД - {dataBaseName}:";
 
                 string[] tableNames = File.ReadAllLines("tables.txt");
                 List<string> s_levelAccess = GetListDataFromSQL($"SELECT [Уровень доступа] FROM LevelAccess WHERE [Пользователь] = '{userName}'");
@@ -272,7 +272,7 @@ namespace ActualSQL
                     List<string> s_levelConf = GetListDataFromSQL($"SELECT [Уровень конфиденциальности] FROM LevelConf WHERE [Таблица] = '{table}'");
                     int levelConf = Convert.ToInt32(s_levelConf[0]);
 
-                    if (levelAccess == levelConf) { GrantRights(userName, table, "RW", "REVOKE"); GrantRights(userName, table, "RW", "GRANT"); }
+                    if (levelAccess == levelConf) { GrantRights(userName, table, "X", "REVOKE"); GrantRights(userName, table, "RW", "GRANT"); }
                     else if (levelAccess < levelConf) { continue; }
                     else { GrantRights(userName, table, "RW", "REVOKE"); GrantRights(userName, table, "R", "GRANT"); ; }
 
@@ -296,20 +296,20 @@ namespace ActualSQL
                     dataGridViews[dataGridViews.Length - 1].BackgroundColor = Color.White;
                     dataGridViews[dataGridViews.Length - 1].AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                     dataGridViews[dataGridViews.Length - 1].Height = tabControl.TabPages[tabControl.TabCount - 1].Height;
-                    dataGridViews[dataGridViews.Length - 1].ScrollBars = ScrollBars.Horizontal;
+                    dataGridViews[dataGridViews.Length - 1].ScrollBars = ScrollBars.Both;
 
                     // установка своего обработчика
                     dataGridViews[dataGridViews.Length - 1].CellClick += DG_CellClick;
+                    dataGridViews[dataGridViews.Length - 1].CellEndEdit += DG_CellEndEdit;
                 }
                 tabControl_Selecting(null, null);
             }
             else
             {
                 Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Вкладчик с паспортом: " + Auth.passTB.Text;
-                tableInfoLbl.Text = $"Доступные объекты БД - {dataBaseName}:";
 
-                CellValueLbl.Hide(); CellValueTB.Hide(); ChangeValueBtn.Hide(); updateBtn.Hide(); AddStringBtn.Hide(); DeleteStringBtn.Hide();
-                UpdateRightsBtn.Hide(); addBtn.Hide(); delBtn.Hide(); backupBtn.Hide(); infoLbl.Hide();
+                ChangeValueBtn.Hide(); updateBtn.Hide(); AddStringBtn.Hide(); DeleteStringBtn.Hide();
+                UpdateRightsBtn.Hide(); addBtn.Hide(); delBtn.Hide(); backupBtn.Hide();
                 Height -= 100;
 
                 string[] queries = { $"SELECT dbo.DViewInWork.Тип, dbo.DViewInWork.[Год открытия], dbo.DViewInWork.Сумма, dbo.DViewInWork.Наименование, dbo.DViewInWork.Консультант FROM DViewInWork WHERE dbo.DViewInWork.[Паспорт владельца] = '{Auth.passTB.Text}'",
@@ -389,10 +389,6 @@ namespace ActualSQL
                     command = $"EXEC ChangeValue {tableName}, {uniField}, {uniFieldValue}, {changeField}, {changeFieldValue}";
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
-                    
-                    FormBox a = new FormBox(this, "success", $"Ячейка таблицы \"{tableName}\" успешно изменена!");
-                    a.ShowDialog();
-                    
                     UpdateAllTables();
                 }
                 catch (SqlException ex)
@@ -524,15 +520,27 @@ namespace ActualSQL
             string uniField = '[' + dataGridViews[selectedTab].Columns[0].Name + ']';
             string uniFieldValue = "'" + dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString() + "'";
             string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';
-            string changeFieldValue = "'" + CellValueTB.Text + "'";
+            //string changeFieldValue = "'" + CellValueTB.Text + "'";
 
-            ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
+            //ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
         }
 
         // обработчик нажатия на ячейку таблицы
         private void DG_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            CellValueTB.Text = DeleteSpaces((sender as DataGridView).CurrentCell.Value.ToString());
+            //CellValueTB.Text = DeleteSpaces((sender as DataGridView).CurrentCell.Value.ToString());
+        }
+
+        private void DG_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            string uniField = '[' + dataGridViews[selectedTab].Columns[0].Name + ']';
+            string uniFieldValue = "'" + dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString() + "'";
+            string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';
+
+            string changeFieldValue = "'" + dataGridViews[selectedTab].CurrentCell.Value + "'";
+
+            ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
+
         }
 
         // обработчик нажатия на кнопку "Добавить строку"
@@ -563,7 +571,6 @@ namespace ActualSQL
                 case "AccessMatrix":
                     addBtn.Text = "Добавить пользователя";
                     delBtn.Text = "Удалить пользователя";
-                    AddStringBtn.Enabled = false; DeleteStringBtn.Enabled = false;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 1;
                     break;
@@ -571,7 +578,6 @@ namespace ActualSQL
                 case "Consultants":
                     addBtn.Text = "Добавить консультанта";
                     delBtn.Text = "Удалить консультанта";
-                    AddStringBtn.Enabled = true; DeleteStringBtn.Enabled = true;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 2;
                     break;
@@ -579,7 +585,6 @@ namespace ActualSQL
                 case "Depositors":
                     addBtn.Text = "Добавить вкладчика";
                     delBtn.Text = "Удалить вкладчика";
-                    AddStringBtn.Enabled = true; DeleteStringBtn.Enabled = true;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 3;
                     break;
@@ -587,7 +592,6 @@ namespace ActualSQL
                 case "Deposits":
                     addBtn.Text = "Добавить вклад";
                     delBtn.Text = "Удалить вклад";
-                    AddStringBtn.Enabled = true; DeleteStringBtn.Enabled = true;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 4;
                     break;
@@ -595,7 +599,6 @@ namespace ActualSQL
                 case "Req_Servs":
                     addBtn.Text = "Добавить услугу к заявке";
                     delBtn.Text = "Удалить заявку с услугой";
-                    AddStringBtn.Enabled = true; DeleteStringBtn.Enabled = true;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 5;
                     break;
@@ -603,7 +606,6 @@ namespace ActualSQL
                 case "Requests":
                     addBtn.Text = "Добавить заявку";
                     delBtn.Text = "Удалить заявку";
-                    AddStringBtn.Enabled = true; DeleteStringBtn.Enabled = true;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 6;
                     break;
@@ -611,7 +613,6 @@ namespace ActualSQL
                 case "Services":
                     addBtn.Text = "Добавить услугу";
                     delBtn.Text = "Удалить услугу";
-                    AddStringBtn.Enabled = true; DeleteStringBtn.Enabled = true;
                     addBtn.Enabled = true; delBtn.Enabled = true;
                     codeCall = 7;
                     break;
@@ -619,7 +620,6 @@ namespace ActualSQL
                 default:
                     addBtn.Text = "Операция не предусмотрена";
                     delBtn.Text = "Операция не предусмотрена";
-                    AddStringBtn.Enabled = false; DeleteStringBtn.Enabled = false;
                     addBtn.Enabled = false; delBtn.Enabled = false;
                     break;
             }
