@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,7 +27,6 @@ namespace ActualSQL
 
         private void EnterButton_Click(object sender, EventArgs e)
         {
-            LoginTB.Text = "sec_admin"; PasswordTB.Text = "123";
             connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={DataBaseTB.Text};User Id={LoginTB.Text};Password={PasswordTB.Text};";
             if (LoginTB.Text == "nopriv_user")
             {
@@ -43,14 +43,14 @@ namespace ActualSQL
                     asDepositor = false;
 
                     FormMain f = new FormMain(this);
-                    List<string> tableNames = f.GetListDataFromSQL("TABLE_NAME", "INFORMATION_SCHEMA.TABLES"); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
+                    string[] tableNames = File.ReadAllLines("tables.txt");
 
-                    if (tableNames.Count == 0)
+                    /*if (tableNames.Count == 0)
                     {
                         FormBox a = new FormBox(null, "error", "Ошибка! У вас нет прав для просмотра таблиц");
                         a.ShowDialog();
                         return;
-                    }
+                    }*/
 
                     Hide();
                     f.ShowDialog();
@@ -66,6 +66,7 @@ namespace ActualSQL
 
         private void FormAuth_Load(object sender, EventArgs e)
         {
+            LoginTB.Text = "sec_admin"; PasswordTB.Text = "123";
             infoLbl.Text = $"Подключение к БД - {DataBaseTB.Text}\nПользователь: " + LoginTB.Text;
         }
 

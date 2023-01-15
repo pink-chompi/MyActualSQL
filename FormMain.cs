@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Windows.Forms;
 
 namespace ActualSQL
@@ -11,6 +12,8 @@ namespace ActualSQL
     public partial class FormMain : Form
     {
         FormAuth Auth;
+
+        public string userName, password;
 
         public int selectedTab = 0, codeCall = -1;
         string dataBaseName = "";
@@ -86,7 +89,9 @@ namespace ActualSQL
             InitializeComponent();
             Auth = f;
             dataBaseName = Auth.DataBaseTB.Text;
-            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={dataBaseName};Integrated Security=false;User Id={Auth.LoginTB.Text};Password={Auth.PasswordTB.Text};";
+            userName = Auth.LoginTB.Text;
+            password = Auth.PasswordTB.Text; ;
+            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={dataBaseName};Integrated Security=false;User Id={userName};Password={password};";
         }  
         
         /* Метод записи в БД через binding (не используется) только для обновления прав пользователям
@@ -118,11 +123,10 @@ namespace ActualSQL
          * Данный метод осуществляет повторный запрос на получение данных от SQL-сервера */
         public void UpdateAllTables()
         {
-            List<string> tableNames = GetListDataFromSQL("TABLE_NAME", "INFORMATION_SCHEMA.TABLES"); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
-            for (int i = 0; i < tableNames.Count; i++)
+            for (int i = 0; i < tabControl.TabPages.Count; i++)
             {
                 bs[i] = new BindingSource();
-                GetData($"SELECT * FROM {tableNames[i]}", bs[i]);
+                GetData($"SELECT * FROM {tabControl.TabPages[i].Text}", bs[i]);
                 dataGridViews[i].DataSource = bs[i];
                 dataGridViews[i].Width = tabControl.TabPages[i].Width;
                 dataGridViews[i].Height = tabControl.TabPages[i].Height;
@@ -133,13 +137,13 @@ namespace ActualSQL
         /* Метод получения списка таблиц базы данных
          * Данный метод осуществляет запрос к INFORMATION_SCHEMA.TABLES базы данных, в которой
          * содержатся все таблицы и возвращает список названий таблиц */
-        public List<string> GetListDataFromSQL(string fieldName, string tableName)
+        public List<string> GetListDataFromSQL(string query)
         {
             List<string> list = new List<string>();
             using (SqlConnection con = new SqlConnection(connectionString))
             {
                 con.Open();
-                using (SqlCommand cmd = new SqlCommand($"SELECT {fieldName} from {tableName}", con))
+                using (SqlCommand cmd = new SqlCommand(query, con))
                 {
                     using (IDataReader dr = cmd.ExecuteReader())
                     {
@@ -177,9 +181,10 @@ namespace ActualSQL
         /* Метод распределения прав пользователям, в соответствии с матрицей доступов (таблицей)
          * Данный метод осуществляет вызов хранимой процедуры GrantRights в соответствии с содержащимся
          * значением R, RWE, X в матрице доступов */
-        public void GrantRights(string user, string table, string Right)
+        public void GrantRights(string user, string table, string Right, string action)
         {
-            string action = "GRANT", command = "";
+            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={dataBaseName};Integrated Security=false;User Id=sec_admin;Password=123;";
+            string command = "";
             using (SqlConnection con = new SqlConnection(connectionString))
             {
                 switch (Right)
@@ -187,15 +192,14 @@ namespace ActualSQL
                     case "R":
                         command = $"EXEC GrantRights {user}, {table}, '{action}', 'SELECT'";
                         break;
-                    case "RWE":
+                    case "RW":
                         if (table.Contains("View"))
                         {
                             command = $"EXEC GrantRights {user}, {table}, '{action}', 'SELECT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.DeleteValue TO {user}";
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
                         }
                         else
                         {
@@ -203,10 +207,9 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.DeleteValue TO {user}";
+                                  //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
+                                  //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
                         }
                         break;
                     case "X":
@@ -223,9 +226,9 @@ namespace ActualSQL
                             command = $"EXEC GrantRights {user}, {table}, '{action}', 'SELECT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
-                                  $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
+                                  $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'";
+                                 // $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
+                                  //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
                         }
                         break;
                 }
@@ -241,6 +244,7 @@ namespace ActualSQL
                     a.ShowDialog();
                 }
             }
+            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={dataBaseName};Integrated Security=false;User Id={userName};Password={password};";
         }
 
         /* Метод загрузки формы (окна со всем содержимым: кнопки, поля ввода, таблицы, вкладки */
@@ -248,21 +252,31 @@ namespace ActualSQL
         {
             if (!Auth.asDepositor)
             {
-                Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Пользователь: " + Auth.LoginTB.Text;
+                Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Пользователь: " + userName;
                 tableInfoLbl.Text = $"Доступные объекты БД - {dataBaseName}:";
 
-                List<string> tableNames = GetListDataFromSQL("TABLE_NAME", "INFORMATION_SCHEMA.TABLES"); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
-                List<string> levelAccess = GetListDataFromSQL("", "LevelAccess");
+                string[] tableNames = File.ReadAllLines("tables.txt");
+                List<string> s_levelAccess = GetListDataFromSQL($"SELECT [Уровень доступа] FROM LevelAccess WHERE [Пользователь] = '{userName}'");
+                int levelAccess = Convert.ToInt32(s_levelAccess[0]);
 
-                if (Auth.LoginTB.Text != "sec_admin")
+
+                if (userName != "sec_admin")
                 {
                     UpdateRightsBtn.Enabled = false;          
                     backupBtn.Enabled = false;
                     restoreBtn.Enabled = false;
-                   
+
                 }
                 foreach (string table in tableNames)
                 {
+                    List<string> s_levelConf = GetListDataFromSQL($"SELECT [Уровень конфиденциальности] FROM LevelConf WHERE [Таблица] = '{table}'");
+                    int levelConf = Convert.ToInt32(s_levelConf[0]);
+
+                    if (levelAccess == levelConf) { GrantRights(userName, table, "RW", "REVOKE"); GrantRights(userName, table, "RW", "GRANT"); }
+                    else if (levelAccess < levelConf) { continue; }
+                    else { GrantRights(userName, table, "RW", "REVOKE"); GrantRights(userName, table, "R", "GRANT"); ; }
+
+
                     Array.Resize(ref bs, bs.Length + 1);
 
                     bs[bs.Length - 1] = new BindingSource();
@@ -356,7 +370,7 @@ namespace ActualSQL
                 {
                     userName = dataGridViews[selectedTab][0, j].Value.ToString(); userName = userName.Replace(" ", ""); 
                     Right = dataGridViews[selectedTab][i, j].Value.ToString(); Right = Right.Replace(" ", "");
-                    GrantRights(userName, tableName, Right);
+                    GrantRights(userName, tableName, Right, "GRANT");
                 }
             }
             WriteDataBinding();
