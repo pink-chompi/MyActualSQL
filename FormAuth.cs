@@ -21,11 +21,12 @@ namespace ActualSQL
         public FormAuth()
         {
             InitializeComponent();
-            DataBaseTB.Text = "db_an";
+            DataBaseTB.Text = "AutoService";
         }
 
         private void EnterButton_Click(object sender, EventArgs e)
         {
+            LoginTB.Text = "sec_admin"; PasswordTB.Text = "123";
             connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={DataBaseTB.Text};User Id={LoginTB.Text};Password={PasswordTB.Text};";
             if (LoginTB.Text == "nopriv_user")
             {
@@ -42,7 +43,7 @@ namespace ActualSQL
                     asDepositor = false;
 
                     FormMain f = new FormMain(this);
-                    List<string> tableNames = f.GetTablesList(); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
+                    List<string> tableNames = f.GetListDataFromSQL("TABLE_NAME", "INFORMATION_SCHEMA.TABLES"); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
 
                     if (tableNames.Count == 0)
                     {

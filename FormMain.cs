@@ -118,7 +118,7 @@ namespace ActualSQL
          * Данный метод осуществляет повторный запрос на получение данных от SQL-сервера */
         public void UpdateAllTables()
         {
-            List<string> tableNames = GetTablesList(); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
+            List<string> tableNames = GetListDataFromSQL("TABLE_NAME", "INFORMATION_SCHEMA.TABLES"); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
             for (int i = 0; i < tableNames.Count; i++)
             {
                 bs[i] = new BindingSource();
@@ -133,13 +133,13 @@ namespace ActualSQL
         /* Метод получения списка таблиц базы данных
          * Данный метод осуществляет запрос к INFORMATION_SCHEMA.TABLES базы данных, в которой
          * содержатся все таблицы и возвращает список названий таблиц */
-        public List<string> GetTablesList()
+        public List<string> GetListDataFromSQL(string fieldName, string tableName)
         {
             List<string> list = new List<string>();
             using (SqlConnection con = new SqlConnection(connectionString))
             {
                 con.Open();
-                using (SqlCommand cmd = new SqlCommand("SELECT TABLE_NAME from INFORMATION_SCHEMA.TABLES", con))
+                using (SqlCommand cmd = new SqlCommand($"SELECT {fieldName} from {tableName}", con))
                 {
                     using (IDataReader dr = cmd.ExecuteReader())
                     {
@@ -251,7 +251,8 @@ namespace ActualSQL
                 Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Пользователь: " + Auth.LoginTB.Text;
                 tableInfoLbl.Text = $"Доступные объекты БД - {dataBaseName}:";
 
-                List<string> tableNames = GetTablesList(); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
+                List<string> tableNames = GetListDataFromSQL("TABLE_NAME", "INFORMATION_SCHEMA.TABLES"); tableNames.Remove("sysdiagrams"); tableNames.Remove("DView");
+                List<string> levelAccess = GetListDataFromSQL("", "LevelAccess");
 
                 if (Auth.LoginTB.Text != "sec_admin")
                 {
