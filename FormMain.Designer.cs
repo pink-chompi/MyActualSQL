@@ -28,9 +28,9 @@
         /// </summary>
         public void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.tabControl = new System.Windows.Forms.TabControl();
-            this.UpdateRightsBtn = new System.Windows.Forms.Button();
             this.ChangeValueBtn = new System.Windows.Forms.Button();
             this.AddStringBtn = new System.Windows.Forms.Button();
             this.DeleteStringBtn = new System.Windows.Forms.Button();
@@ -39,6 +39,10 @@
             this.delBtn = new System.Windows.Forms.Button();
             this.backupBtn = new System.Windows.Forms.Button();
             this.restoreBtn = new System.Windows.Forms.Button();
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.AddToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.DelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -49,16 +53,6 @@
             this.tabControl.Size = new System.Drawing.Size(678, 336);
             this.tabControl.TabIndex = 5;
             this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
-            // 
-            // UpdateRightsBtn
-            // 
-            this.UpdateRightsBtn.Location = new System.Drawing.Point(195, 516);
-            this.UpdateRightsBtn.Name = "UpdateRightsBtn";
-            this.UpdateRightsBtn.Size = new System.Drawing.Size(231, 23);
-            this.UpdateRightsBtn.TabIndex = 6;
-            this.UpdateRightsBtn.Text = "Обновить права доступа";
-            this.UpdateRightsBtn.UseVisualStyleBackColor = true;
-            this.UpdateRightsBtn.Click += new System.EventHandler(this.UpdateRights_Click);
             // 
             // ChangeValueBtn
             // 
@@ -140,6 +134,26 @@
             this.restoreBtn.UseVisualStyleBackColor = true;
             this.restoreBtn.Click += new System.EventHandler(this.restoreBtn_Click);
             // 
+            // contextMenuStrip
+            // 
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.AddToolStripMenuItem,
+            this.DelToolStripMenuItem});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(127, 48);
+            // 
+            // AddToolStripMenuItem
+            // 
+            this.AddToolStripMenuItem.Name = "AddToolStripMenuItem";
+            this.AddToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.AddToolStripMenuItem.Text = "Добавить";
+            // 
+            // DelToolStripMenuItem
+            // 
+            this.DelToolStripMenuItem.Name = "DelToolStripMenuItem";
+            this.DelToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.DelToolStripMenuItem.Text = "Удалить";
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -153,7 +167,6 @@
             this.Controls.Add(this.DeleteStringBtn);
             this.Controls.Add(this.AddStringBtn);
             this.Controls.Add(this.ChangeValueBtn);
-            this.Controls.Add(this.UpdateRightsBtn);
             this.Controls.Add(this.tabControl);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -163,13 +176,13 @@
             this.Text = "Form1";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormMain_FormClosed);
             this.Load += new System.EventHandler(this.FormMain_Load);
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
         private System.Windows.Forms.TabControl tabControl;
-        private System.Windows.Forms.Button UpdateRightsBtn;
         private System.Windows.Forms.Button ChangeValueBtn;
         private System.Windows.Forms.Button AddStringBtn;
         private System.Windows.Forms.Button DeleteStringBtn;
@@ -178,6 +191,9 @@
         private System.Windows.Forms.Button delBtn;
         private System.Windows.Forms.Button backupBtn;
         private System.Windows.Forms.Button restoreBtn;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem AddToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem DelToolStripMenuItem;
     }
 }
 

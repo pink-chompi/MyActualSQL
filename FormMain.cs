@@ -253,7 +253,7 @@ namespace ActualSQL
         {
             if (!Auth.asDepositor)
             {
-                Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Пользователь: " + userName;
+                Text = "Пользователь: " + userName;
 
                 string[] tableNames = File.ReadAllLines("tables.txt");
                 List<string> s_levelAccess = GetListDataFromSQL($"SELECT [Уровень доступа] FROM LevelAccess WHERE [Пользователь] = '{userName}'");
@@ -261,8 +261,7 @@ namespace ActualSQL
 
 
                 if (userName != "sec_admin")
-                {
-                    UpdateRightsBtn.Enabled = false;          
+                {         
                     backupBtn.Enabled = false;
                     restoreBtn.Enabled = false;
 
@@ -301,15 +300,16 @@ namespace ActualSQL
                     // установка своего обработчика
                     dataGridViews[dataGridViews.Length - 1].CellClick += DG_CellClick;
                     dataGridViews[dataGridViews.Length - 1].CellEndEdit += DG_CellEndEdit;
+                    dataGridViews[dataGridViews.Length - 1].ContextMenuStrip = contextMenuStrip;
                 }
                 tabControl_Selecting(null, null);
             }
             else
             {
-                Text = "Клиент взаимодействия с БД - " + dataBaseName + " | Вкладчик с паспортом: " + Auth.passTB.Text;
+                Text = "Клиент: " + Auth.passTB.Text;
 
                 ChangeValueBtn.Hide(); updateBtn.Hide(); AddStringBtn.Hide(); DeleteStringBtn.Hide();
-                UpdateRightsBtn.Hide(); addBtn.Hide(); delBtn.Hide(); backupBtn.Hide();
+                addBtn.Hide(); delBtn.Hide(); backupBtn.Hide();
                 Height -= 100;
 
                 string[] queries = { $"SELECT dbo.DViewInWork.Тип, dbo.DViewInWork.[Год открытия], dbo.DViewInWork.Сумма, dbo.DViewInWork.Наименование, dbo.DViewInWork.Консультант FROM DViewInWork WHERE dbo.DViewInWork.[Паспорт владельца] = '{Auth.passTB.Text}'",
@@ -350,30 +350,6 @@ namespace ActualSQL
         private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
         {
             Application.Exit();
-        }
-
-        /* Метод обновления прав в таблице с матрицей доступов
-         * Данный метод осуществляет вызов метода распределения прав пользователей в соответствии
-         * со значениями R, W, RW в таблице с матрицей доступов */
-        private void UpdateRights_Click(object sender, EventArgs e)
-        {
-            int cc = dataGridViews[selectedTab].ColumnCount;
-            int rw = dataGridViews[selectedTab].RowCount;
-
-            string tableName = "", userName = "", Right = "";
-
-            for (int i = 1; i < cc; i++)
-            {
-                tableName = dataGridViews[selectedTab].Columns[i].Name; tableName = tableName.Replace("table_", "");
-
-                for (int j = 0; j < rw - 1; j++)
-                {
-                    userName = dataGridViews[selectedTab][0, j].Value.ToString(); userName = userName.Replace(" ", ""); 
-                    Right = dataGridViews[selectedTab][i, j].Value.ToString(); Right = Right.Replace(" ", "");
-                    GrantRights(userName, tableName, Right, "GRANT");
-                }
-            }
-            WriteDataBinding();
         }
 
         /* Метод изменения значения в ячейке таблицы
@@ -568,53 +544,39 @@ namespace ActualSQL
 
             switch (currenttableName)
             {
-                case "AccessMatrix":
-                    addBtn.Text = "Добавить пользователя";
-                    delBtn.Text = "Удалить пользователя";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
+                case "Clients":
+                    AddToolStripMenuItem.Text = "Добавить клиента в таблицу";
+                    DelToolStripMenuItem.Text = "Удалить клиента из таблицы";
                     codeCall = 1;
                     break;
                 
-                case "Consultants":
-                    addBtn.Text = "Добавить консультанта";
-                    delBtn.Text = "Удалить консультанта";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
-                    codeCall = 2;
+                case "Masters":
+                    AddToolStripMenuItem.Text = "Добавить мастера в таблицу";
+                    DelToolStripMenuItem.Text = "Удалить мастера из таблицы";
                     break;
 
-                case "Depositors":
-                    addBtn.Text = "Добавить вкладчика";
-                    delBtn.Text = "Удалить вкладчика";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
+                case "Orders":
+                    AddToolStripMenuItem.Text = "Добавить заказ в таблицу";
+                    DelToolStripMenuItem.Text = "Удалить заказ из таблицы";
                     codeCall = 3;
                     break;
                 
-                case "Deposits":
-                    addBtn.Text = "Добавить вклад";
-                    delBtn.Text = "Удалить вклад";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
+                case "Serv_Orders":
+                    AddToolStripMenuItem.Text = "Добавить соответствие в таблицу";
+                    DelToolStripMenuItem.Text = "Удалить соответствие из таблицы";
                     codeCall = 4;
                     break;
 
-                case "Req_Servs":
-                    addBtn.Text = "Добавить услугу к заявке";
-                    delBtn.Text = "Удалить заявку с услугой";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
+                case "Services":
+                    AddToolStripMenuItem.Text = "Добавить услугу в таблицу";
+                    DelToolStripMenuItem.Text = "Удалить услугу из таблицы";
                     codeCall = 5;
                     break;
 
-                case "Requests":
-                    addBtn.Text = "Добавить заявку";
-                    delBtn.Text = "Удалить заявку";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
+                case "Vehicles":
+                    AddToolStripMenuItem.Text = "Добавить автомобиль в таблицу";
+                    DelToolStripMenuItem.Text = "Удалить автомобиль из таблицы";
                     codeCall = 6;
-                    break;
-
-                case "Services":
-                    addBtn.Text = "Добавить услугу";
-                    delBtn.Text = "Удалить услугу";
-                    addBtn.Enabled = true; delBtn.Enabled = true;
-                    codeCall = 7;
                     break;
 
                 default:
