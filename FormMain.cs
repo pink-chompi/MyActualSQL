@@ -19,7 +19,9 @@ namespace ActualSQL
         string dataBaseName = "";
         string connectionString = "";
         public string currenttableName = "";
-        
+
+        string oldCellValue = "";
+
         SqlDataAdapter dataAdapter = new SqlDataAdapter();
         BindingSource[] bs = new BindingSource[0];
         public DataGridView[] dataGridViews = new DataGridView[0];
@@ -207,8 +209,8 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
-                                  //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
-                                  //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
                         }
                         break;
@@ -227,9 +229,9 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
-                            // $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
-                            //$" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
                         }
                         break;
                 }
@@ -262,8 +264,7 @@ namespace ActualSQL
 
                 if (userName != "sec_admin")
                 {         
-                    backupBtn.Enabled = false;
-                    restoreBtn.Enabled = false;
+
 
                 }
                 foreach (string table in tableNames)
@@ -297,20 +298,17 @@ namespace ActualSQL
                     dataGridViews[dataGridViews.Length - 1].Height = tabControl.TabPages[tabControl.TabCount - 1].Height;
                     dataGridViews[dataGridViews.Length - 1].ScrollBars = ScrollBars.Both;
 
-                    // установка своего обработчика
+                    // установка своего обработчика 
+                    //dataGridViews[dataGridViews.Length - 1].SelectionChanged += DG_SelectionChanged;
                     dataGridViews[dataGridViews.Length - 1].CellClick += DG_CellClick;
                     dataGridViews[dataGridViews.Length - 1].CellEndEdit += DG_CellEndEdit;
                     dataGridViews[dataGridViews.Length - 1].ContextMenuStrip = contextMenuStrip;
                 }
-                tabControl_Selecting(null, null);
+                tabControl_Selecting(dataGridViews[dataGridViews.Length - 1], null);
             }
             else
             {
                 Text = "Клиент: " + Auth.passTB.Text;
-
-                ChangeValueBtn.Hide(); updateBtn.Hide(); AddStringBtn.Hide(); DeleteStringBtn.Hide();
-                addBtn.Hide(); delBtn.Hide(); backupBtn.Hide();
-                Height -= 100;
 
                 string[] queries = { $"SELECT dbo.DViewInWork.Тип, dbo.DViewInWork.[Год открытия], dbo.DViewInWork.Сумма, dbo.DViewInWork.Наименование, dbo.DViewInWork.Консультант FROM DViewInWork WHERE dbo.DViewInWork.[Паспорт владельца] = '{Auth.passTB.Text}'",
                 $"SELECT [Тип], [Год открытия], [Сумма] FROM dbo.DViewAll WHERE [Паспорт] =  '{Auth.passTB.Text}'"};
@@ -365,7 +363,6 @@ namespace ActualSQL
                     command = $"EXEC ChangeValue {tableName}, {uniField}, {uniFieldValue}, {changeField}, {changeFieldValue}";
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
-                    UpdateAllTables();
                 }
                 catch (SqlException ex)
                 {
@@ -490,21 +487,25 @@ namespace ActualSQL
             }
         }
 
-        // обработчик нажатия на кнопку "Изменить значение"
-        private void ChangeValueBtn_Click(object sender, EventArgs e)
+        private void DG_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            dataGridViews[selectedTab].Columns[0].ReadOnly = true;
+            //oldCellValue = (sender as DataGridView).CurrentCell.Value.ToString();
+            //CellValueTB.Text = DeleteSpaces((sender as DataGridView).CurrentCell.Value.ToString());
+        }
+
+        private void DG_SelectionChanged(object sender, EventArgs e)
         {
             string uniField = '[' + dataGridViews[selectedTab].Columns[0].Name + ']';
             string uniFieldValue = "'" + dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString() + "'";
             string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';
-            //string changeFieldValue = "'" + CellValueTB.Text + "'";
 
-            //ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
-        }
+            //string changeFieldValue = "'" + oldCellValue + "'";
 
-        // обработчик нажатия на ячейку таблицы
-        private void DG_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            //CellValueTB.Text = DeleteSpaces((sender as DataGridView).CurrentCell.Value.ToString());
+            string changeFieldValue = "'" + dataGridViews[selectedTab].CurrentCell.Value + "'";
+
+            ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
+            UpdateAllTables();
         }
 
         private void DG_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -513,34 +514,23 @@ namespace ActualSQL
             string uniFieldValue = "'" + dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString() + "'";
             string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';
 
+            //string changeFieldValue = "'" + oldCellValue + "'";
+            
             string changeFieldValue = "'" + dataGridViews[selectedTab].CurrentCell.Value + "'";
 
             ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
-
-        }
-
-        // обработчик нажатия на кнопку "Добавить строку"
-        private void AddStringBtn_Click(object sender, EventArgs e)
-        { 
-            string fields = GetFields(currenttableName);
-            string values = GetFieldsValues(selectedTab);
-            AddString(currenttableName, fields, values);
-        } 
-
-        // обработчик нажатия на кнопку "Удалить строку"
-        private void DeleteStringBtn_Click(object sender, EventArgs e)
-        {
-            string uniField = dataGridViews[selectedTab].Columns[0].Name;
-            string uniFieldValue = dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString();
-            DeleteString(currenttableName, uniField, uniFieldValue);
+            UpdateAllTables();
         }
 
         // обработчик выбора вкладки
         private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
         {
+          
             currentTab = tabControl.SelectedTab;
             currenttableName = currentTab.AccessibilityObject.Name;
             selectedTab = tabControl.TabPages.IndexOf(tabControl.SelectedTab);
+
+            
 
             switch (currenttableName)
             {
@@ -553,6 +543,7 @@ namespace ActualSQL
                 case "Masters":
                     AddToolStripMenuItem.Text = "Добавить мастера в таблицу";
                     DelToolStripMenuItem.Text = "Удалить мастера из таблицы";
+                    codeCall = 2;
                     break;
 
                 case "Orders":
@@ -580,9 +571,9 @@ namespace ActualSQL
                     break;
 
                 default:
-                    addBtn.Text = "Операция не предусмотрена";
-                    delBtn.Text = "Операция не предусмотрена";
-                    addBtn.Enabled = false; delBtn.Enabled = false;
+                    AddToolStripMenuItem.Text = "Операция не предусмотрена"; AddToolStripMenuItem.Enabled = false;
+                    DelToolStripMenuItem.Text = "Операция не предусмотрена"; DelToolStripMenuItem.Enabled = false;
+                    codeCall = -1;
                     break;
             }
         }
@@ -638,7 +629,68 @@ namespace ActualSQL
             }
         }
 
-        private void delBtn_Click(object sender, EventArgs e)
+        private void UpdStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateAllTables();
+        }
+
+        private void AddToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string[] parameters;
+            string[] values;
+            switch (codeCall)
+            {
+                // AccessMatrix
+                case -1:
+                    FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
+                    a.ShowDialog();
+                    break;
+
+                // Clients
+                case 1:
+                    parameters = GetFields(currenttableName).Split(',');
+                    values = GetFieldsValues(selectedTab).Split(',');
+                    sp_Call("AddNewClients", parameters, values);
+                    break;
+
+                // Masters
+                case 2:
+                    parameters = GetFields(currenttableName).Split(',');
+                    values = GetFieldsValues(selectedTab).Split(',');
+                    sp_Call("AddNewMasters", parameters, values);
+                    break;
+
+                // Orders
+                case 3:
+                    parameters = GetFields(currenttableName).Split(',');
+                    values = GetFieldsValues(selectedTab).Split(',');
+                    sp_Call("AddNewOrders", parameters, values);
+                    break;
+
+                // Serv_Orders
+                case 4:
+                    parameters = GetFields(currenttableName).Split(',');
+                    values = GetFieldsValues(selectedTab).Split(',');
+                    sp_Call("AddNewServ_Orders", parameters, values);
+                    break;
+
+                // Services
+                case 5:
+                    parameters = GetFields(currenttableName).Split(',');
+                    values = GetFieldsValues(selectedTab).Split(',');
+                    sp_Call("AddNewServices", parameters, values);
+                    break;
+
+                // Vehicles
+                case 6:
+                    parameters = GetFields(currenttableName).Split(',');
+                    values = GetFieldsValues(selectedTab).Split(',');
+                    sp_Call("AddNewVehicles", parameters, values);
+                    break;
+            }
+        }
+
+        private void DelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string userName, uniField, uniFieldValue;
             string[] parameters = null;
@@ -646,73 +698,73 @@ namespace ActualSQL
             switch (codeCall)
             {
                 // AccessMatrix
-                case 1:
+                case -1:
                     userName = DeleteSpaces(dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     uniField = dataGridViews[selectedTab].Columns[0].Name;
                     uniFieldValue = dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString();
                     DeleteUser(userName, uniField, uniFieldValue);
                     break;
 
-                // Consultants
-                case 2:
+                // Clients
+                case 1:
 
                     uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
                     uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
                     Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
-                    sp_Call("DeleteConsultants", parameters, values);
+                    sp_Call("DeleteClients", parameters, values);
                     break;
 
-                // Depositors
+                // Masters
+                case 2:
+                    uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
+                    uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
+                    Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
+                    Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
+                    sp_Call("DeleteMasters", parameters, values);
+                    break;
+
+                // Orders
                 case 3:
                     uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
                     uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
                     Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
-                    sp_Call("DeleteDepositors", parameters, values);
+                    sp_Call("DeleteOrders", parameters, values);
                     break;
 
-                // Deposits
+                // Serv_Orders
                 case 4:
-                    uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
-                    uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
-                    Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
-                    Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
-                    sp_Call("DeleteDeposits", parameters, values);
-                    break;
-
-                // Req_Serv
-                case 5:
                     //parameters = GetFields(currenttableName).Split(',');
                     //values = GetCurrentFieldsValues(selectedTab, dataGridViews[selectedTab].CurrentCell.RowIndex).Split(',');
                     uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
                     uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
                     Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
-                    sp_Call("DeleteReq_Servs", parameters, values);
-                    break;
-
-                // Requests
-                case 6:
-                    uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
-                    uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
-                    Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
-                    Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
-                    sp_Call("DeleteRequests", parameters, values);
+                    sp_Call("DeleteServ_Orders", parameters, values);
                     break;
 
                 // Services
-                case 7:
+                case 5:
                     uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
                     uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
                     Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
                     sp_Call("DeleteServices", parameters, values);
                     break;
+
+                // Vehicles
+                case 6:
+                    uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
+                    uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
+                    Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;
+                    Array.Resize(ref values, 1); values[values.Length - 1] = uniFieldValue;
+                    sp_Call("DeleteVehicles", parameters, values);
+                    break;
             }
         }
 
-        private void backupBtn_Click(object sender, EventArgs e)
+        private void BackupStripMenuItem_Click(object sender, EventArgs e)
         {
             string command;
             using (SqlConnection con = new SqlConnection(connectionString))
@@ -736,7 +788,7 @@ namespace ActualSQL
             }
         }
 
-        private void restoreBtn_Click(object sender, EventArgs e)
+        private void RestoreStripMenuItem_Click(object sender, EventArgs e)
         {
             string command;
             using (SqlConnection con = new SqlConnection(connectionString))
@@ -769,58 +821,7 @@ namespace ActualSQL
 
         private void addBtn_Click(object sender, EventArgs e)
         {
-            string[] parameters;
-            string[] values;
-            switch (codeCall)
-            {
-                // AccessMatrix
-                case 1:
-                    FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
-                    a.ShowDialog();
-                    break;
-
-                // Consultants
-                case 2:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewConsultants", parameters, values);
-                    break;
-
-                // Depositors
-                case 3:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewDepositors", parameters, values);
-                    break;
-
-                // Deposits
-                case 4:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewDeposits", parameters, values);
-                    break;
-
-                // Req_Serv
-                case 5:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewReq_Servs", parameters, values);
-                    break;
-
-                // Requests
-                case 6:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewRequests", parameters, values);
-                    break;
-
-                // Services
-                case 7:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewServices", parameters, values);
-                    break;
-            }
+            
         }
     }
 }
