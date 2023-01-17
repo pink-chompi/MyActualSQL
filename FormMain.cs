@@ -790,11 +790,10 @@ namespace ActualSQL
             }
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
-            //FormBox a = new FormBox(this, "error");
-            
-            //a.ShowDialog();
+            FormInput a = new FormInput(this);
+            a.ShowDialog();
         }
 
         private void addBtn_Click(object sender, EventArgs e)
