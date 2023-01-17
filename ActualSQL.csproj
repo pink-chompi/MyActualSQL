@@ -52,12 +52,6 @@
     <Compile Include="FormAuth.Designer.cs">
       <DependentUpon>FormAuth.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormBox.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FormBox.Designer.cs">
-      <DependentUpon>FormBox.cs</DependentUpon>
-    </Compile>
     <Compile Include="FormMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,9 +62,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="FormAuth.resx">
       <DependentUpon>FormAuth.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FormBox.resx">
-      <DependentUpon>FormBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormMain.resx">
       <DependentUpon>FormMain.cs</DependentUpon>

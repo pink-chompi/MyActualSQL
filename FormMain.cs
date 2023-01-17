@@ -20,8 +20,6 @@ namespace ActualSQL
         string connectionString = "";
         public string currenttableName = "";
 
-        string oldCellValue = "";
-
         SqlDataAdapter dataAdapter = new SqlDataAdapter();
         BindingSource[] bs = new BindingSource[0];
         public DataGridView[] dataGridViews = new DataGridView[0];
@@ -90,7 +88,7 @@ namespace ActualSQL
         {
             InitializeComponent();
             Auth = f;
-            dataBaseName = Auth.DataBaseTB.Text;
+            dataBaseName = "AutoService";
             userName = Auth.LoginTB.Text;
             password = Auth.PasswordTB.Text; ;
             connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={dataBaseName};Integrated Security=false;User Id={userName};Password={password};";
@@ -110,14 +108,11 @@ namespace ActualSQL
             {
                 dataAdapter.UpdateCommand = cmdbl.GetUpdateCommand();
                 dataAdapter.Update((DataTable)bs[tabControl.SelectedIndex].DataSource);
-
-                FormBox a = new FormBox(this, "success", $"Права пользователей успешно обновлены!");
-                a.ShowDialog();
             }
             catch (SqlException ex)
             {
-                FormBox a = new FormBox(this, "error", "Ошибка обновления прав пользователей");
-                a.ShowDialog();
+                //FormBox a = new FormBox(this, "error", "Ошибка обновления прав пользователей");
+                //a.ShowDialog();
             }
         }
 
@@ -243,8 +238,7 @@ namespace ActualSQL
                 }
                 catch (SqlException ex)
                 {
-                    FormBox a = new FormBox(this, "error", $"Ошибка назначения прав пользователю {user}");
-                    a.ShowDialog();
+                    MessageBox.Show($"Ошибка назначения прав пользователю {user}");
                 }
             }
             connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={dataBaseName};Integrated Security=false;User Id={userName};Password={password};";
@@ -366,8 +360,7 @@ namespace ActualSQL
                 }
                 catch (SqlException ex)
                 {
-                    FormBox a = new FormBox(this, "error", "Ошибка изменения значения ячейки");
-                    a.ShowDialog();
+                    MessageBox.Show("Ошибка изменения значения ячейки");
                 }
             }
         }
@@ -385,15 +378,13 @@ namespace ActualSQL
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
 
-                    FormBox a = new FormBox(this, "success", $"Строка успешно добавлена в таблицу \"{tableName}\"!");
-                    a.ShowDialog();
+                    MessageBox.Show($"Строка успешно добавлена в таблицу \"{tableName}\"!");
 
                     UpdateAllTables();
                 }
                 catch (SqlException ex)
                 {
-                    FormBox a = new FormBox(this, "error", "Ошибка добавления строки");
-                    a.ShowDialog();
+                    MessageBox.Show("Ошибка добавления строки");
                 }
             }
         }
@@ -412,14 +403,11 @@ namespace ActualSQL
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
 
-                    FormBox a = new FormBox(this, "success", $"Строка из таблицы \"{tableName}\" успешно удалена!");
-                    a.ShowDialog();
-                    UpdateAllTables();
+                    MessageBox.Show("Строка из таблицы \"{tableName}\" успешно удалена!");
                 }
                 catch (SqlException ex) 
                 {
-                    FormBox a = new FormBox(this, "error", "Ошибка удаления строки"); 
-                    a.ShowDialog(); 
+                    MessageBox.Show("Ошибка удаления строки"); 
                 }
             }
         }
@@ -445,14 +433,12 @@ namespace ActualSQL
                         cmd.CommandText = $"EXEC InsertValue {currenttableName}, '{fields}', \"{values}\"";
                         cmd.ExecuteNonQuery();
 
-                        FormBox a = new FormBox(this, "success", $"Пользователь \"{userName}\" успешно добавлен!");
-                        a.ShowDialog();
+                        MessageBox.Show($"Пользователь \"{userName}\" успешно добавлен!");
                         UpdateAllTables();
                     }
                     catch (SqlException ex)
                     {
-                        FormBox a = new FormBox(this, "error", "Ошибка добавления пользователя");
-                        a.ShowDialog();
+                        MessageBox.Show("Ошибка добавления пользователя");
                     }
                 }
             }
@@ -475,14 +461,12 @@ namespace ActualSQL
                     cmd.CommandText = $"EXEC DeleteValue {currenttableName}, {uniField}, {uniFieldValue}";
                     cmd.ExecuteNonQuery();
 
-                    FormBox a = new FormBox(this, "success", $"Пользователь \"{userName}\" успешно удален!");
-                    a.ShowDialog();
+                    MessageBox.Show($"Пользователь \"{userName}\" успешно удален!");
                     UpdateAllTables();
                 }
                 catch (SqlException ex)
                 {
-                    FormBox a = new FormBox(this, "error", "Ошибка удаления пользователя");
-                    a.ShowDialog();
+                    MessageBox.Show("Ошибка удаления пользователя");
                 }
             }
         }
@@ -616,15 +600,12 @@ namespace ActualSQL
                     cmd.Parameters.Add(outParameter);
                     cmd.ExecuteNonQuery();
 
-                    FormBox a = new FormBox(this, "warning", cmd.Parameters["@Out"].Value.ToString());
-                    a.ShowDialog();
-
+                    MessageBox.Show(cmd.Parameters["@Out"].Value.ToString());
                     UpdateAllTables();
                 }
                 catch (SqlException ex)
                 {
-                    FormBox a = new FormBox(this, "error", "Данная операция запрещена политикой безопасности");
-                    a.ShowDialog();
+                    MessageBox.Show("Данная операция запрещена политикой безопасности");
                 }
             }
         }
@@ -642,8 +623,8 @@ namespace ActualSQL
             {
                 // AccessMatrix
                 case -1:
-                    FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
-                    a.ShowDialog();
+                    //FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
+                    //a.ShowDialog();
                     break;
 
                 // Clients
@@ -776,14 +757,12 @@ namespace ActualSQL
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
 
-                    FormBox a = new FormBox(this, "success", "Резервное копирование базы данных успешно завершено!");
-                    a.ShowDialog();
+                    MessageBox.Show("Резервное копирование базы данных успешно завершено!");
                     UpdateAllTables();
                 }
                 catch (Exception ex)
                 {
-                    FormBox a = new FormBox(this, "error", ex.Message);
-                    a.ShowDialog();
+                    MessageBox.Show("error", ex.Message);
                 }
             }
         }
@@ -802,8 +781,7 @@ namespace ActualSQL
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
 
-                    FormBox a = new FormBox(this, "success", "Восстановление базы данных успешно завершено! Требуется повторная авторизация");
-                    a.ShowDialog();
+                    MessageBox.Show("Восстановление базы данных успешно завершено! Требуется повторная авторизация");
                 }
                 catch (Exception ex)
                 {

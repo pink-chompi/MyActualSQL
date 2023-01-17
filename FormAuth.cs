@@ -22,16 +22,14 @@ namespace ActualSQL
         public FormAuth()
         {
             InitializeComponent();
-            DataBaseTB.Text = "AutoService";
         }
 
         private void EnterButton_Click(object sender, EventArgs e)
         {
-            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={DataBaseTB.Text};User Id={LoginTB.Text};Password={PasswordTB.Text};";
+            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database=AutoService;User Id={LoginTB.Text};Password={PasswordTB.Text};";
             if (LoginTB.Text == "nopriv_user")
             {
-                FormBox a = new FormBox(null, "error", "Ошибка! Данный пользователь не имеет прямого доступа к БД");
-                a.ShowDialog();
+                MessageBox.Show("Ошибка! Данный пользователь не имеет прямого доступа к БД");
                 return;
             }
 
@@ -57,8 +55,7 @@ namespace ActualSQL
                 }
                 catch (SqlException ex)
                 {
-                    FormBox a = new FormBox(null, "error", ex.Message);
-                    a.ShowDialog();
+                    MessageBox.Show(ex.Message);
                 }
 
             }
@@ -67,17 +64,16 @@ namespace ActualSQL
         private void FormAuth_Load(object sender, EventArgs e)
         {
             LoginTB.Text = "sec_admin"; PasswordTB.Text = "123";
-            infoLbl.Text = $"Подключение к БД - {DataBaseTB.Text}\nПользователь: " + LoginTB.Text;
         }
 
         private void LoginTB_TextChanged(object sender, EventArgs e)
         {
-            infoLbl.Text = $"Подключение к БД - {DataBaseTB.Text}\nПользователь: " + LoginTB.Text;
+
         }
 
         private void DataBaseTB_TextChanged(object sender, EventArgs e)
         {
-            infoLbl.Text = $"Подключение к БД - {DataBaseTB.Text}\nПользователь: " + LoginTB.Text;
+
         }
 
         string[] GetPassportList(string query)
@@ -102,13 +98,13 @@ namespace ActualSQL
             return result;
         }
 
-        private void depositorBtn_Click(object sender, EventArgs e)
+        private void clientBtn_Click(object sender, EventArgs e)
         {
             f = new FormMain(this);
             asDepositor = true;
             LoginTB.Text = "nopriv_user";
             PasswordTB.Text = "";
-            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database={DataBaseTB.Text};User Id={LoginTB.Text};Password={PasswordTB.Text};";
+            connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database=AutoService;User Id={LoginTB.Text};Password={PasswordTB.Text};";
 
             string[] depositors = GetPassportList($"SELECT [Паспорт] from dbo.DView");
 
@@ -123,17 +119,21 @@ namespace ActualSQL
                 }
                 else
                 {
-                    FormBox a = new FormBox(null, "error", "У вкладчика с введенными паспортными данными нет вкладов");
-                    a.ShowDialog();
+                    MessageBox.Show("У вкладчика с введенными паспортными данными нет вкладов");
                     return;
                 }
                 
             }
             else
             {
-                FormBox a = new FormBox(null, "error", "Вкладчика с введенными паспортными данными не существует!");
-                a.ShowDialog();
+                MessageBox.Show("Вкладчика с введенными паспортными данными не существует!");
             }
+        }
+
+        private void checkBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox.Checked) clientBtn.Enabled = true;
+            else clientBtn.Enabled = false;
         }
     }
 }
