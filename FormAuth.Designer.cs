@@ -68,6 +68,7 @@
             // UserNameLbl
             // 
             this.UserNameLbl.AutoSize = true;
+            this.UserNameLbl.ForeColor = System.Drawing.SystemColors.ControlText;
             this.UserNameLbl.Location = new System.Drawing.Point(12, 13);
             this.UserNameLbl.Name = "UserNameLbl";
             this.UserNameLbl.Size = new System.Drawing.Size(106, 13);
