@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace ActualSQL
@@ -124,7 +125,8 @@ namespace ActualSQL
             {
                 bs[i] = new BindingSource();
                 GetData($"SELECT * FROM {tabControl.TabPages[i].Text}", bs[i]);
-                dataGridViews[i].DataSource = bs[i];
+                try { dataGridViews[i].DataSource = bs[i]; }
+                catch { }
                 dataGridViews[i].Width = tabControl.TabPages[i].Width;
                 dataGridViews[i].Height = tabControl.TabPages[i].Height;
                 dataGridViews[i].Update();
@@ -206,6 +208,7 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.InsertValue TO {user}" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
                         }
                         break;
@@ -224,9 +227,10 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'INSERT'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'UPDATE'" +
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}";
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.InsertValue TO {user}" +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
                         }
                         break;
                 }
@@ -252,15 +256,21 @@ namespace ActualSQL
                 Text = "Пользователь: " + userName;
 
                 string[] tableNames = File.ReadAllLines("tables.txt");
+
+                GrantRights(userName, "LevelAccess", "R", "GRANT"); GrantRights(userName, "LevelConf", "R", "GRANT");
+
                 List<string> s_levelAccess = GetListDataFromSQL($"SELECT [Уровень доступа] FROM LevelAccess WHERE [Пользователь] = '{userName}'");
                 int levelAccess = Convert.ToInt32(s_levelAccess[0]);
 
 
                 if (userName != "sec_admin")
-                {         
-
-
+                {
+                    List<string> tmp = tableNames.ToList();
+                    tmp.Remove("LevelAccess"); 
+                    tmp.Remove("LevelConf");
+                    tableNames = tmp.ToArray();
                 }
+
                 foreach (string table in tableNames)
                 {
                     List<string> s_levelConf = GetListDataFromSQL($"SELECT [Уровень конфиденциальности] FROM LevelConf WHERE [Таблица] = '{table}'");
@@ -304,10 +314,9 @@ namespace ActualSQL
             {
                 Text = "Клиент: " + Auth.passTB.Text;
 
-                string[] queries = { $"SELECT dbo.DViewInWork.Тип, dbo.DViewInWork.[Год открытия], dbo.DViewInWork.Сумма, dbo.DViewInWork.Наименование, dbo.DViewInWork.Консультант FROM DViewInWork WHERE dbo.DViewInWork.[Паспорт владельца] = '{Auth.passTB.Text}'",
-                $"SELECT [Тип], [Год открытия], [Сумма] FROM dbo.DViewAll WHERE [Паспорт] =  '{Auth.passTB.Text}'"};
+                string[] queries = { $"SELECT [Дата заказа], [Государственный номер], Марка, Фамилия, Имя, Отчество, Название, Стоимость FROM dbo.DViewOrders WHERE dbo.DViewOrders.[Телефон] = '{Auth.passTB.Text}'" };
 
-                string[] tableNames = { "Вклады в очереди", "Все вклады" };
+                string[] tableNames = { "Заказы на ремонт" };
 
                 for (int i = 0; i < queries.Length; i++)
                 {
@@ -418,15 +427,12 @@ namespace ActualSQL
             string command;
             if (userName != "")
             {
-                for (int i = 1; i <= dataGridViews[selectedTab].Columns.Count - 1; i++)
-                    values += ", 'X'";
-
                 using (SqlConnection con = new SqlConnection(connectionString))
                 {
                     try
                     {
                         con.Open();
-                        command = $"EXEC AddNewAccessMatrix {userName}, '{password}'";
+                        command = $"EXEC AddNewLevelAccess {userName}, '{password}'";
                         SqlCommand cmd = new SqlCommand(command, con);
                         cmd.ExecuteNonQuery();
 
@@ -454,7 +460,7 @@ namespace ActualSQL
                 try
                 {
                     con.Open();
-                    command = $"EXEC DeleteAccessMatrix {userName}";
+                    command = $"EXEC DeleteLevelAccess {userName}";
                     SqlCommand cmd = new SqlCommand(command, con);
                     cmd.ExecuteNonQuery();
 
@@ -474,8 +480,6 @@ namespace ActualSQL
         private void DG_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             dataGridViews[selectedTab].Columns[0].ReadOnly = true;
-            //oldCellValue = (sender as DataGridView).CurrentCell.Value.ToString();
-            //CellValueTB.Text = DeleteSpaces((sender as DataGridView).CurrentCell.Value.ToString());
         }
 
         private void DG_SelectionChanged(object sender, EventArgs e)
@@ -483,8 +487,6 @@ namespace ActualSQL
             string uniField = '[' + dataGridViews[selectedTab].Columns[0].Name + ']';
             string uniFieldValue = "'" + dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString() + "'";
             string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';
-
-            //string changeFieldValue = "'" + oldCellValue + "'";
 
             string changeFieldValue = "'" + dataGridViews[selectedTab].CurrentCell.Value + "'";
 
@@ -496,10 +498,7 @@ namespace ActualSQL
         {
             string uniField = '[' + dataGridViews[selectedTab].Columns[0].Name + ']';
             string uniFieldValue = "'" + dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString() + "'";
-            string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';
-
-            //string changeFieldValue = "'" + oldCellValue + "'";
-            
+            string changeField = '[' + dataGridViews[selectedTab].Columns[dataGridViews[selectedTab].CurrentCell.ColumnIndex].Name + ']';         
             string changeFieldValue = "'" + dataGridViews[selectedTab].CurrentCell.Value + "'";
 
             ChangeValueCell(currenttableName, uniField, uniFieldValue, changeField, changeFieldValue);
@@ -509,49 +508,52 @@ namespace ActualSQL
         // обработчик выбора вкладки
         private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
         {
-          
             currentTab = tabControl.SelectedTab;
             currenttableName = currentTab.AccessibilityObject.Name;
             selectedTab = tabControl.TabPages.IndexOf(tabControl.SelectedTab);
 
-            
-
             switch (currenttableName)
             {
                 case "Clients":
-                    AddToolStripMenuItem.Text = "Добавить клиента в таблицу";
-                    DelToolStripMenuItem.Text = "Удалить клиента из таблицы";
+                    AddToolStripMenuItem.Text = "Добавить клиента в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить клиента из таблицы"; DelToolStripMenuItem.Enabled = true;
                     codeCall = 1;
                     break;
                 
                 case "Masters":
-                    AddToolStripMenuItem.Text = "Добавить мастера в таблицу";
-                    DelToolStripMenuItem.Text = "Удалить мастера из таблицы";
+                    AddToolStripMenuItem.Text = "Добавить мастера в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить мастера из таблицы"; DelToolStripMenuItem.Enabled = true;
                     codeCall = 2;
                     break;
 
                 case "Orders":
-                    AddToolStripMenuItem.Text = "Добавить заказ в таблицу";
-                    DelToolStripMenuItem.Text = "Удалить заказ из таблицы";
+                    AddToolStripMenuItem.Text = "Добавить заказ в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить заказ из таблицы"; DelToolStripMenuItem.Enabled = true;
                     codeCall = 3;
                     break;
                 
                 case "Serv_Orders":
-                    AddToolStripMenuItem.Text = "Добавить соответствие в таблицу";
-                    DelToolStripMenuItem.Text = "Удалить соответствие из таблицы";
+                    AddToolStripMenuItem.Text = "Добавить соответствие в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить соответствие из таблицы"; DelToolStripMenuItem.Enabled = true;
                     codeCall = 4;
                     break;
 
                 case "Services":
-                    AddToolStripMenuItem.Text = "Добавить услугу в таблицу";
-                    DelToolStripMenuItem.Text = "Удалить услугу из таблицы";
+                    AddToolStripMenuItem.Text = "Добавить услугу в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить услугу из таблицы"; DelToolStripMenuItem.Enabled = true;
                     codeCall = 5;
                     break;
 
                 case "Vehicles":
-                    AddToolStripMenuItem.Text = "Добавить автомобиль в таблицу";
-                    DelToolStripMenuItem.Text = "Удалить автомобиль из таблицы";
+                    AddToolStripMenuItem.Text = "Добавить автомобиль в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить автомобиль из таблицы"; DelToolStripMenuItem.Enabled = true;
                     codeCall = 6;
+                    break;
+
+                case "LevelAccess":
+                    AddToolStripMenuItem.Text = "Добавить пользователя в таблицу"; AddToolStripMenuItem.Enabled = true;
+                    DelToolStripMenuItem.Text = "Удалить пользователя из таблицы"; DelToolStripMenuItem.Enabled = true;
+                    codeCall = 7;
                     break;
 
                 default:
@@ -629,7 +631,7 @@ namespace ActualSQL
             switch (codeCall)
             {
                 // AccessMatrix
-                case -1:
+                case 7:
                     userName = DeleteSpaces(dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     uniField = dataGridViews[selectedTab].Columns[0].Name;
                     uniFieldValue = dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString();
@@ -666,8 +668,6 @@ namespace ActualSQL
 
                 // Serv_Orders
                 case 4:
-                    //parameters = GetFields(currenttableName).Split(',');
-                    //values = GetCurrentFieldsValues(selectedTab, dataGridViews[selectedTab].CurrentCell.RowIndex).Split(',');
                     uniField = string.Format("[{0}]", dataGridViews[selectedTab].Columns[0].Name);
                     uniFieldValue = string.Format("'{0}'", dataGridViews[selectedTab][0, dataGridViews[selectedTab].CurrentCell.RowIndex].Value.ToString());
                     Array.Resize(ref parameters, 1); parameters[parameters.Length - 1] = uniField;

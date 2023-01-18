@@ -106,27 +106,17 @@ namespace ActualSQL
             PasswordTB.Text = "";
             connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database=AutoService;User Id={LoginTB.Text};Password={PasswordTB.Text};";
 
-            string[] depositors = GetPassportList($"SELECT [Паспорт] from dbo.DView");
+            string[] depositors = GetPassportList($"SELECT [Телефон] from dbo.DViewOrders");
 
             if (depositors.Contains(f.DeleteSpaces(passTB.Text)))
             {
-                string[] deposits = GetPassportList($"SELECT [Паспорт] from dbo.DViewAll");
-                if (deposits.Contains(f.DeleteSpaces(passTB.Text)))
-                {
-                    f = new FormMain(this);
-                    Hide();
-                    f.ShowDialog();
-                }
-                else
-                {
-                    MessageBox.Show("У вкладчика с введенными паспортными данными нет вкладов");
-                    return;
-                }
-                
+                f = new FormMain(this);
+                Hide();
+                f.ShowDialog();    
             }
             else
             {
-                MessageBox.Show("Вкладчика с введенными паспортными данными не существует!");
+                MessageBox.Show("Клиента с введенным номером телефона не существует!");
             }
         }
 

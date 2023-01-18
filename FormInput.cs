@@ -18,57 +18,69 @@ namespace ActualSQL
 
         FormMain formMain;
 
+        string GetValues()
+        {
+            string values = "";
+            for (int i = 0; i < textBoxes.Length; i++) values += $"'{textBoxes[i].Text}'" + ",";
+
+            values = values.Remove(values.Length - 1, 1);
+            return values;
+        }
+
         private void subBtn_Click(object sender, EventArgs e)
         {
             string[] parameters;
             string[] values;
             switch (formMain.codeCall)
             {
-                // AccessMatrix
-                case -1:
-                    //FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
-                    //a.ShowDialog();
+                // LevelAccess
+                case 7:
+                    string userName = textBoxes[0].Text;
+                    string password = "123";
+                    string fields = formMain.GetFields(formMain.currenttableName);
+                    string fvalues = $"'{userName}','{textBoxes[1].Text}'";
+                    formMain.sp_addUser(userName, password, fields, fvalues);
                     break;
 
                 // Clients
                 case 1:
                     parameters = formMain.GetFields(formMain.currenttableName).Split(',');
-                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    values = GetValues().Split(',');
                     formMain.sp_Call("AddNewClients", parameters, values);
                     break;
 
                 // Masters
                 case 2:
                     parameters = formMain.GetFields(formMain.currenttableName).Split(',');
-                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    values = GetValues().Split(',');
                     formMain.sp_Call("AddNewMasters", parameters, values);
                     break;
 
                 // Orders
                 case 3:
                     parameters = formMain.GetFields(formMain.currenttableName).Split(',');
-                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    values = GetValues().Split(',');
                     formMain.sp_Call("AddNewOrders", parameters, values);
                     break;
 
                 // Serv_Orders
                 case 4:
                     parameters = formMain.GetFields(formMain.currenttableName).Split(',');
-                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    values = GetValues().Split(',');
                     formMain.sp_Call("AddNewServ_Orders", parameters, values);
                     break;
 
                 // Services
                 case 5:
                     parameters = formMain.GetFields(formMain.currenttableName).Split(',');
-                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    values = GetValues().Split(',');
                     formMain.sp_Call("AddNewServices", parameters, values);
                     break;
 
                 // Vehicles
                 case 6:
                     parameters = formMain.GetFields(formMain.currenttableName).Split(',');
-                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    values = GetValues().Split(',');
                     formMain.sp_Call("AddNewVehicles", parameters, values);
                     break;
             }
