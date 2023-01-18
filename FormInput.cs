@@ -14,8 +14,67 @@ namespace ActualSQL
     {
         Label[] labels = new Label[0];
         TextBox[] textBoxes = new TextBox[0];
+        Button subBtn = new Button();
 
         FormMain formMain;
+
+        private void subBtn_Click(object sender, EventArgs e)
+        {
+            string[] parameters;
+            string[] values;
+            switch (formMain.codeCall)
+            {
+                // AccessMatrix
+                case -1:
+                    //FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
+                    //a.ShowDialog();
+                    break;
+
+                // Clients
+                case 1:
+                    parameters = formMain.GetFields(formMain.currenttableName).Split(',');
+                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    formMain.sp_Call("AddNewClients", parameters, values);
+                    break;
+
+                // Masters
+                case 2:
+                    parameters = formMain.GetFields(formMain.currenttableName).Split(',');
+                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    formMain.sp_Call("AddNewMasters", parameters, values);
+                    break;
+
+                // Orders
+                case 3:
+                    parameters = formMain.GetFields(formMain.currenttableName).Split(',');
+                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    formMain.sp_Call("AddNewOrders", parameters, values);
+                    break;
+
+                // Serv_Orders
+                case 4:
+                    parameters = formMain.GetFields(formMain.currenttableName).Split(',');
+                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    formMain.sp_Call("AddNewServ_Orders", parameters, values);
+                    break;
+
+                // Services
+                case 5:
+                    parameters = formMain.GetFields(formMain.currenttableName).Split(',');
+                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    formMain.sp_Call("AddNewServices", parameters, values);
+                    break;
+
+                // Vehicles
+                case 6:
+                    parameters = formMain.GetFields(formMain.currenttableName).Split(',');
+                    values = formMain.GetFieldsValues(formMain.selectedTab).Split(',');
+                    formMain.sp_Call("AddNewVehicles", parameters, values);
+                    break;
+            }
+        }
+
+
         public FormInput(FormMain f)
         {
             InitializeComponent();  
@@ -28,19 +87,29 @@ namespace ActualSQL
                 labels[labels.Length - 1] = new Label(); textBoxes[textBoxes.Length - 1] = new TextBox();
                 labels[labels.Length - 1].Location = new Point(15, 15 + (i * 50)); textBoxes[textBoxes.Length - 1].Location = new Point(15, labels[labels.Length - 1].Height + 15 + (i * 50));
 
+
                 labels[labels.Length - 1].Text = formMain.dataGridViews[formMain.selectedTab].Columns[i].HeaderText;
+                
 
                 textBoxes[textBoxes.Length - 1].Width += 50;
 
                 //labels[labels.Length - 1].ForeColor = Color.Black;
 
                 this.Controls.Add(labels[labels.Length - 1]); this.Controls.Add(textBoxes[textBoxes.Length - 1]);
-                //MessageBox.Show(formMain.dataGridViews[formMain.selectedTab].Columns[i].HeaderText);
+                //MessageBox.Show(formMain.dataGridViews[formMain.formMain.selectedTab].Columns[i].HeaderText);
                 formHeight += labels[labels.Length - 1].Height + textBoxes[textBoxes.Length - 1].Height;
             }
-            Height = 100 + formHeight;
+            Height = 130 + formHeight;
             Width = 50 + textBoxes[0].Width;
             StartPosition = FormStartPosition.CenterParent;
+
+            subBtn.Width = textBoxes[textBoxes.Length - 1].Width;
+            subBtn.Text = "Ввод";
+            subBtn.Location = new Point(15, 10 + textBoxes[textBoxes.Length - 1].Top + textBoxes[textBoxes.Length - 1].Height);
+
+            this.subBtn.Click += new System.EventHandler(this.subBtn_Click);
+
+            this.Controls.Add(subBtn);
         }
     }
 }

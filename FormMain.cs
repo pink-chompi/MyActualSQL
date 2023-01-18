@@ -60,7 +60,7 @@ namespace ActualSQL
         }
 
         /* Метод получения содержимого последней строки в таблице с индексом index */
-        string GetFieldsValues(int index)
+        public string GetFieldsValues(int index)
         {
             string result = "", cellValue = "";
             for (int i = 0; i < dataGridViews[index].Columns.Count; i++)
@@ -568,7 +568,7 @@ namespace ActualSQL
         }
 
         /* Метод вызова хранимых процедур из БД */
-        void sp_Call(string nameSP, string[] parameters, string[] values)
+        public void sp_Call(string nameSP, string[] parameters, string[] values)
         {
             using (SqlConnection con = new SqlConnection(connectionString))
             {
@@ -617,58 +617,8 @@ namespace ActualSQL
 
         private void AddToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string[] parameters;
-            string[] values;
-            switch (codeCall)
-            {
-                // AccessMatrix
-                case -1:
-                    //FormBox a = new FormBox(this, "input", "Введите пароль для пользователя");
-                    //a.ShowDialog();
-                    break;
-
-                // Clients
-                case 1:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewClients", parameters, values);
-                    break;
-
-                // Masters
-                case 2:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewMasters", parameters, values);
-                    break;
-
-                // Orders
-                case 3:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewOrders", parameters, values);
-                    break;
-
-                // Serv_Orders
-                case 4:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewServ_Orders", parameters, values);
-                    break;
-
-                // Services
-                case 5:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewServices", parameters, values);
-                    break;
-
-                // Vehicles
-                case 6:
-                    parameters = GetFields(currenttableName).Split(',');
-                    values = GetFieldsValues(selectedTab).Split(',');
-                    sp_Call("AddNewVehicles", parameters, values);
-                    break;
-            }
+            FormInput f = new FormInput(this);
+            f.ShowDialog();
         }
 
         private void DelToolStripMenuItem_Click(object sender, EventArgs e)
