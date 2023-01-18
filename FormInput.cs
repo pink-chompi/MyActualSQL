@@ -20,29 +20,27 @@ namespace ActualSQL
         {
             InitializeComponent();  
             formMain = f;
-        }
 
-        private void FormInput_Load(object sender, EventArgs e)
-        {
+            int formHeight = 0;
             for (int i = 0; i < formMain.dataGridViews[formMain.selectedTab].Columns.Count; i++)
             {
-                Array.Resize(ref labels, labels.Length + 1);
-                labels[labels.Length - 1] = new Label();
-                labels[labels.Length - 1].Location = new Point(50, 50);
-                labels[labels.Length - 1].Text = "24241251512512"; //formMain.dataGridViews[formMain.selectedTab].Columns[i].HeaderText;
-                labels[labels.Length - 1].Visible = true;
-                labels[labels.Length - 1].Enabled = true;
-                labels[labels.Length - 1].ForeColor = Color.Black;
-                labels[labels.Length - 1].Height = 50;
-                labels[labels.Length - 1].Width = 50;
-                labels[labels.Length - 1].BorderStyle = BorderStyle.FixedSingle;
-                labels[labels.Length - 1].Name = "label" + i.ToString();
-                labels[labels.Length - 1].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+                Array.Resize(ref labels, labels.Length + 1); Array.Resize(ref textBoxes, textBoxes.Length + 1);
+                labels[labels.Length - 1] = new Label(); textBoxes[textBoxes.Length - 1] = new TextBox();
+                labels[labels.Length - 1].Location = new Point(15, 15 + (i * 50)); textBoxes[textBoxes.Length - 1].Location = new Point(15, labels[labels.Length - 1].Height + 15 + (i * 50));
 
-                this.Controls.Add(labels[labels.Length - 1]);
+                labels[labels.Length - 1].Text = formMain.dataGridViews[formMain.selectedTab].Columns[i].HeaderText;
+
+                textBoxes[textBoxes.Length - 1].Width += 50;
+
+                //labels[labels.Length - 1].ForeColor = Color.Black;
+
+                this.Controls.Add(labels[labels.Length - 1]); this.Controls.Add(textBoxes[textBoxes.Length - 1]);
                 //MessageBox.Show(formMain.dataGridViews[formMain.selectedTab].Columns[i].HeaderText);
+                formHeight += labels[labels.Length - 1].Height + textBoxes[textBoxes.Length - 1].Height;
             }
-            
+            Height = 100 + formHeight;
+            Width = 50 + textBoxes[0].Width;
+            StartPosition = FormStartPosition.CenterParent;
         }
     }
 }
