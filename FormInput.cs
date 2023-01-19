@@ -21,8 +21,11 @@ namespace ActualSQL
         string GetValues()
         {
             string values = "";
-            for (int i = 0; i < textBoxes.Length; i++) values += $"'{textBoxes[i].Text}'" + ",";
-
+            for (int i = 0; i < textBoxes.Length; i++)
+            {
+                if (textBoxes[i].Text == "") { MessageBox.Show("Введена не вся информация!"); return ""; }
+                values += $"'{textBoxes[i].Text}'" + ",";
+            }
             values = values.Remove(values.Length - 1, 1);
             return values;
         }

@@ -43,14 +43,8 @@ namespace ActualSQL
                     FormMain f = new FormMain(this);
                     string[] tableNames = File.ReadAllLines("tables.txt");
 
-                    /*if (tableNames.Count == 0)
-                    {
-                        FormBox a = new FormBox(null, "error", "Ошибка! У вас нет прав для просмотра таблиц");
-                        a.ShowDialog();
-                        return;
-                    }*/
-
                     Hide();
+                    MessageBox.Show($"Добро пожаловать {LoginTB.Text}!");
                     f.ShowDialog();
                 }
                 catch (SqlException ex)
@@ -76,7 +70,7 @@ namespace ActualSQL
 
         }
 
-        string[] GetPassportList(string query)
+        string[] GetPhonetList(string query)
         {
             f = new FormMain(this);
             string[] result = new string[0];
@@ -106,10 +100,11 @@ namespace ActualSQL
             PasswordTB.Text = "";
             connectionString = $"Server=DESKTOP-4KUDERO\\SQLEXPRESS;Database=AutoService;User Id={LoginTB.Text};Password={PasswordTB.Text};";
 
-            string[] depositors = GetPassportList($"SELECT [Телефон] from dbo.DViewOrders");
+            string[] clients = GetPhonetList($"SELECT [Телефон] from dbo.DViewOrders");
 
-            if (depositors.Contains(f.DeleteSpaces(passTB.Text)))
+            if (clients.Contains(f.DeleteSpaces(passTB.Text)))
             {
+                MessageBox.Show("Добро пожаловать!");
                 f = new FormMain(this);
                 Hide();
                 f.ShowDialog();    

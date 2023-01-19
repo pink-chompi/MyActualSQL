@@ -29,7 +29,6 @@
         public void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.AddToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -102,7 +101,6 @@
             this.ClientSize = new System.Drawing.Size(700, 551);
             this.Controls.Add(this.tabControl);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "FormMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

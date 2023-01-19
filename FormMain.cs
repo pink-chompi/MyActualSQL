@@ -208,8 +208,8 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.InsertValue TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.InsertValue TO {user} " +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user} ";
                         }
                         break;
                     case "X":
@@ -229,8 +229,8 @@ namespace ActualSQL
                                   $" EXEC GrantRights {user}, {table}, '{action}', 'DELETE'" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.AddNew{table} TO {user}" +
                                   $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.Delete{table} TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.InsertValue TO {user}" +
-                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user}";
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.InsertValue TO {user} " +
+                                  $" USE {dataBaseName}; {action} EXECUTE ON OBJECT::dbo.ChangeValue TO {user} ";
                         }
                         break;
                 }
@@ -276,10 +276,12 @@ namespace ActualSQL
                     List<string> s_levelConf = GetListDataFromSQL($"SELECT [Уровень конфиденциальности] FROM LevelConf WHERE [Таблица] = '{table}'");
                     int levelConf = Convert.ToInt32(s_levelConf[0]);
 
-                    if (levelAccess == levelConf) { GrantRights(userName, table, "X", "REVOKE"); GrantRights(userName, table, "RW", "GRANT"); }
-                    else if (levelAccess < levelConf) { continue; }
-                    else { GrantRights(userName, table, "RW", "REVOKE"); GrantRights(userName, table, "R", "GRANT"); ; }
-
+                    if (table != "LevelConf")
+                    {
+                        if (levelAccess == levelConf) { GrantRights(userName, table, "X", "REVOKE"); GrantRights(userName, table, "RW", "GRANT"); }
+                        else if (levelAccess < levelConf) { continue; }
+                        else { GrantRights(userName, table, "RW", "REVOKE"); GrantRights(userName, table, "R", "GRANT"); ; }
+                    }
 
                     Array.Resize(ref bs, bs.Length + 1);
 
